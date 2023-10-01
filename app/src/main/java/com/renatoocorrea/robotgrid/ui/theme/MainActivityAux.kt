@@ -54,13 +54,25 @@ class MainActivityAux : ComponentActivity() {
     }
 }
 
-data class State(val food: Pair<Int, Int>, val snake: List<Pair<Int, Int>>, var scoreRobotOne: Int, var scoreRobotTwo: Int)
+data class State(
+    val food: Pair<Int, Int>,
+    val snake: List<Pair<Int, Int>>,
+    var scoreRobotOne: Int,
+    var scoreRobotTwo: Int
+)
 
 class Game(private val scope: CoroutineScope) {
 
     private val mutex = Mutex()
     private val mutableState =
-        MutableStateFlow(State(food = Pair(0, 0), snake = listOf(Pair(7, 7)), scoreRobotOne = 0, scoreRobotTwo = 0))
+        MutableStateFlow(
+            State(
+                food = Pair(0, 0),
+                snake = listOf(Pair(7, 7)),
+                scoreRobotOne = 0,
+                scoreRobotTwo = 0
+            )
+        )
     val state: Flow<State> = mutableState
     private var snakeLength = 1
 
@@ -68,6 +80,7 @@ class Game(private val scope: CoroutineScope) {
         set(value) {
             scope.launch {
                 mutex.withLock {
+                    Log.e("TESTE", "FIELD: $field")
                     field = value
                     tryToMove()
                 }
@@ -76,16 +89,45 @@ class Game(private val scope: CoroutineScope) {
 
     fun tryToMove() {
         scope.launch {
-
-//            while (true) {
             delay(500)
             mutableState.update {
                 val newPosition = it.snake.first().let { poz ->
-                    snakeLength++
-                    mutex.withLock {
+                    Log.e("TESTE", "POZ: " + poz)
+                    Log.e("TESTE", "Move: " + move)
+
+                    var direction = ""
+                    when (move) {
+                        Pair(1, 0) -> {
+                            direction = "frente"
+                        }
+
+                        Pair(0, 1) -> {
+                            direction = "baixo"
+                        }
+
+                        Pair(-1, 0) -> {
+                            direction = "trás"
+                        }
+
+                        Pair(0, -1) -> {
+                            direction = "cima"
+                        }
+                    }
+                    val boolean = checkIfCanMove(direction, poz)
+
+
+                    if(boolean) {
+                        snakeLength++
+                        mutex.withLock {
+                            Pair(
+                                (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE,
+                                (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
+                            )
+                        }
+                    } else {
                         Pair(
-                            (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE,
-                            (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
+                            (poz.first + 0 + BOARD_SIZE) % BOARD_SIZE,
+                            (poz.second + 0 + BOARD_SIZE) % BOARD_SIZE
                         )
                     }
                 }
@@ -93,12 +135,11 @@ class Game(private val scope: CoroutineScope) {
                 //GAME HAVE BEEN WON
                 if (newPosition == it.food) {
                     it.scoreRobotOne++
-//                    snakeLength++
-//                    YouHaveWon()
                 }
 
                 if (it.snake.contains(newPosition)) {
                     snakeLength = 1
+                    it.scoreRobotOne = 0
                 }
 
                 it.copy(
@@ -110,7 +151,6 @@ class Game(private val scope: CoroutineScope) {
                 )
             }
         }
-//        }
 
     }
 
@@ -153,10 +193,50 @@ class Game(private val scope: CoroutineScope) {
     companion object {
         const val BOARD_SIZE = 7
     }
+
+    private fun checkIfCanMove(direction: String, poz: Pair<Int, Int>): Boolean {
+        var result = false
+
+        when (direction) {
+            "frente" -> {
+                if (poz.first > 5) {
+                    result = false
+                } else {
+                    result = true
+                }
+            }
+
+            "baixo" -> {
+                if (poz.second > 5) {
+                    result = false
+                } else {
+                    result = true
+                }
+            }
+
+            "trás" -> {
+                if (poz.first < 1) {
+                    result = false
+                } else {
+                    result = true
+                }
+            }
+
+            "cima" -> {
+                if (poz.second < 1) {
+                    result = false
+                } else {
+                    result = true
+                }
+            }
+        }
+
+        return result
+    }
 }
 
 @Composable
-fun YouHaveWon(){
+fun YouHaveWon() {
     Text(text = "YOU HAVE WON")
 }
 
