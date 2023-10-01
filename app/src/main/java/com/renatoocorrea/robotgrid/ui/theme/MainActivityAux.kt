@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -53,15 +54,15 @@ class MainActivityAux : ComponentActivity() {
     }
 }
 
-data class State(val food: Pair<Int, Int>, val snake: List<Pair<Int, Int>>)
+data class State(val food: Pair<Int, Int>, val snake: List<Pair<Int, Int>>, var scoreRobotOne: Int, var scoreRobotTwo: Int)
 
 class Game(private val scope: CoroutineScope) {
 
     private val mutex = Mutex()
     private val mutableState =
-        MutableStateFlow(State(food = Pair(0, 0), snake = listOf(Pair(7, 7))))
+        MutableStateFlow(State(food = Pair(0, 0), snake = listOf(Pair(7, 7)), scoreRobotOne = 0, scoreRobotTwo = 0))
     val state: Flow<State> = mutableState
-    var snakeLength = 1
+    private var snakeLength = 1
 
     var move = Pair(1, 0)
         set(value) {
@@ -80,6 +81,7 @@ class Game(private val scope: CoroutineScope) {
             delay(500)
             mutableState.update {
                 val newPosition = it.snake.first().let { poz ->
+                    snakeLength++
                     mutex.withLock {
                         Pair(
                             (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE,
@@ -88,8 +90,11 @@ class Game(private val scope: CoroutineScope) {
                     }
                 }
 
+                //GAME HAVE BEEN WON
                 if (newPosition == it.food) {
-                    snakeLength++
+                    it.scoreRobotOne++
+//                    snakeLength++
+//                    YouHaveWon()
                 }
 
                 if (it.snake.contains(newPosition)) {
@@ -151,6 +156,11 @@ class Game(private val scope: CoroutineScope) {
 }
 
 @Composable
+fun YouHaveWon(){
+    Text(text = "YOU HAVE WON")
+}
+
+@Composable
 fun Snake(game: Game) {
     val state = game.state.collectAsState(initial = null)
 
@@ -189,8 +199,11 @@ fun Buttons(onDirectionChange: (Pair<Int, Int>) -> Unit) {
 
 @Composable
 fun Board(state: State) {
+    Text(text = "SCORE1: " + state.scoreRobotOne)
+    Text(text = "SCORE2: " + state.scoreRobotOne)
     BoxWithConstraints(Modifier.padding(16.dp)) {
         val tileSize = maxWidth / Game.BOARD_SIZE
+
 
         //QUADRO DO JOGO
         Box(
