@@ -69,7 +69,7 @@ class Game(private val scope: CoroutineScope) {
             State(
                 food = Pair(0, 0),
                 snake = listOf(Pair(7, 7)),
-                secondRobot = listOf(Pair(3,3)),
+                secondRobot = listOf(Pair(3, 3)),
                 scoreRobotOne = 0,
                 scoreRobotTwo = 0,
             )
@@ -91,7 +91,7 @@ class Game(private val scope: CoroutineScope) {
         scope.launch {
             delay(500)
             mutableState.update {
-                val newPosition: Pair<Int,Int> = createThePosition(it.snake, it)
+                val newPosition: Pair<Int, Int> = createThePosition(it.snake, it)
 
                 val newPositionRobot2 = createThePosition(it.secondRobot, it)
                 //GAME HAVE BEEN WON
@@ -99,7 +99,7 @@ class Game(private val scope: CoroutineScope) {
                     it.scoreRobotOne++
                 }
 
-                if (newPositionRobot2 == it.food){
+                if (newPositionRobot2 == it.food) {
                     it.scoreRobotTwo++
                 }
 
@@ -122,10 +122,15 @@ class Game(private val scope: CoroutineScope) {
 
 
                 it.copy(
-                    food = if (newPosition == it.food) Pair(
-                        Random().nextInt(BOARD_SIZE),
-                        Random().nextInt(BOARD_SIZE)
-                    ) else it.food,
+                    food = if (newPosition == it.food || newPositionRobot2 == it.food) {
+                        checkPrizeLocation(it, newPosition)
+                        /*Pair(
+                            Random().nextInt(BOARD_SIZE),
+                            Random().nextInt(BOARD_SIZE)
+                        )*/
+                    } else {
+                        it.food
+                    },
                     snake = listOf(newPosition) + it.snake.take(snakeLength - 1),
                     secondRobot = listOf(newPositionRobot2) + it.secondRobot.take(snakeLength - 1)
                 )
@@ -134,7 +139,29 @@ class Game(private val scope: CoroutineScope) {
 
     }
 
-    private suspend fun createThePosition(robot: List<Pair<Int, Int>>, state: State): Pair<Int,Int> {
+    private fun checkPrizeLocation(state: State, newPosition: Pair<Int, Int>): Pair<Int, Int> {
+        var x = Random().nextInt(BOARD_SIZE)
+        var y = Random().nextInt(BOARD_SIZE)
+        var validPairForPrize = Pair(x, y)
+
+        while (state.snake.contains(validPairForPrize) || state.secondRobot.contains(validPairForPrize)) {
+            x = Random().nextInt(BOARD_SIZE)
+            y = Random().nextInt(BOARD_SIZE)
+            validPairForPrize = Pair(x,y)
+        }
+
+        Log.e("TESTE", "PrizeLocation: $validPairForPrize")
+        return validPairForPrize
+        /* state.food = if (newPosition == state.food) Pair(
+             Random().nextInt(BOARD_SIZE),
+             Random().nextInt(BOARD_SIZE)
+         ) else state.food*/
+    }
+
+    private suspend fun createThePosition(
+        robot: List<Pair<Int, Int>>,
+        state: State
+    ): Pair<Int, Int> {
         robot.first().let { poz ->
             var direction = ""
             when (move) {
@@ -156,7 +183,7 @@ class Game(private val scope: CoroutineScope) {
             }
 
             val finalMoveStart = (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE
-            val finalMoveEnd =  (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
+            val finalMoveEnd = (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
             val futurePoz = Pair(finalMoveStart, finalMoveEnd)
             var boolean = checkIfCanMove(direction, poz)
 
@@ -177,8 +204,8 @@ class Game(private val scope: CoroutineScope) {
 
             if (boolean) {
                 snakeLength++
-                 mutex.withLock {
-                     return Pair(
+                mutex.withLock {
+                    return Pair(
                         (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE,
                         (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
                     )
@@ -191,6 +218,7 @@ class Game(private val scope: CoroutineScope) {
             }
         }
     }
+
     init {
         scope.launch {
             var snakeLength = 1
@@ -322,7 +350,7 @@ fun Buttons(onDirectionChange: (Pair<Int, Int>) -> Unit) {
 @Composable
 fun Board(state: State) {
     Text(text = "SCORE1: " + state.scoreRobotOne)
-    Text(text = "SCORE2: " + state.scoreRobotOne)
+    Text(text = "SCORE2: " + state.scoreRobotTwo)
     BoxWithConstraints(Modifier.padding(16.dp)) {
         val tileSize = maxWidth / Game.BOARD_SIZE
 
