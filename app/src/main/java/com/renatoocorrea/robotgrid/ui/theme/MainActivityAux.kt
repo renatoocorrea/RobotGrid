@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -82,7 +81,6 @@ class Game(private val scope: CoroutineScope) {
         set(value) {
             scope.launch {
                 mutex.withLock {
-                    Log.e("TESTE", "FIELD: $field")
                     field = value
                     tryToMove()
                 }
@@ -93,87 +91,9 @@ class Game(private val scope: CoroutineScope) {
         scope.launch {
             delay(500)
             mutableState.update {
-                val newPosition = it.snake.first().let { poz ->
-                    Log.e("TESTE", "POZ: " + poz)
-                    Log.e("TESTE", "Move: " + move)
+                val newPosition: Pair<Int,Int> = createThePosition(it.snake)
 
-                    var direction = ""
-                    when (move) {
-                        Pair(1, 0) -> {
-                            direction = "frente"
-                        }
-
-                        Pair(0, 1) -> {
-                            direction = "baixo"
-                        }
-
-                        Pair(-1, 0) -> {
-                            direction = "trás"
-                        }
-
-                        Pair(0, -1) -> {
-                            direction = "cima"
-                        }
-                    }
-                    val boolean = checkIfCanMove(direction, poz)
-
-
-                    if (boolean) {
-                        snakeLength++
-                        mutex.withLock {
-                            Pair(
-                                (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE,
-                                (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
-                            )
-                        }
-                    } else {
-                        Pair(
-                            (poz.first + 0 + BOARD_SIZE) % BOARD_SIZE,
-                            (poz.second + 0 + BOARD_SIZE) % BOARD_SIZE
-                        )
-                    }
-                }
-
-                val newPositionRobot2 = it.secondRobot.first().let { poz ->
-                    Log.e("TESTE", "POZ: " + poz)
-                    Log.e("TESTE", "Move: " + move)
-
-                    var direction = ""
-                    when (move) {
-                        Pair(1, 0) -> {
-                            direction = "frente"
-                        }
-
-                        Pair(0, 1) -> {
-                            direction = "baixo"
-                        }
-
-                        Pair(-1, 0) -> {
-                            direction = "trás"
-                        }
-
-                        Pair(0, -1) -> {
-                            direction = "cima"
-                        }
-                    }
-                    val boolean = checkIfCanMove(direction, poz)
-
-
-                    if (boolean) {
-                        snakeLength++
-                        mutex.withLock {
-                            Pair(
-                                (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE,
-                                (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
-                            )
-                        }
-                    } else {
-                        Pair(
-                            (poz.first + 0 + BOARD_SIZE) % BOARD_SIZE,
-                            (poz.second + 0 + BOARD_SIZE) % BOARD_SIZE
-                        )
-                    }
-                }
+                val newPositionRobot2 = createThePosition(it.secondRobot)
                 //GAME HAVE BEEN WON
                 if (newPosition == it.food) {
                     it.scoreRobotOne++
@@ -184,8 +104,6 @@ class Game(private val scope: CoroutineScope) {
                     it.scoreRobotOne = 0
                 }
 
-                Log.e("TESTE", "NEW POSITION: " + newPosition)
-                Log.e("TESTE", "NP ROBOT 2: " + it.secondRobot.first())
                 if (newPosition == it.secondRobot.first()) {
                     Log.e("TESTE", "SNAKE EATING ROBOT")
                     snakeLength = 1
@@ -212,6 +130,44 @@ class Game(private val scope: CoroutineScope) {
 
     }
 
+    private suspend fun createThePosition(robot: List<Pair<Int, Int>>): Pair<Int,Int> {
+        robot.first().let { poz ->
+            var direction = ""
+            when (move) {
+                Pair(1, 0) -> {
+                    direction = "frente"
+                }
+
+                Pair(0, 1) -> {
+                    direction = "baixo"
+                }
+
+                Pair(-1, 0) -> {
+                    direction = "trás"
+                }
+
+                Pair(0, -1) -> {
+                    direction = "cima"
+                }
+            }
+            val boolean = checkIfCanMove(direction, poz)
+
+            if (boolean) {
+                snakeLength++
+                 mutex.withLock {
+                     return Pair(
+                        (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE,
+                        (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
+                    )
+                }
+            } else {
+                return Pair(
+                    (poz.first + 0 + BOARD_SIZE) % BOARD_SIZE,
+                    (poz.second + 0 + BOARD_SIZE) % BOARD_SIZE
+                )
+            }
+        }
+    }
     init {
         scope.launch {
             var snakeLength = 1
