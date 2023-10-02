@@ -91,15 +91,19 @@ class Game(private val scope: CoroutineScope) {
         scope.launch {
             delay(500)
             mutableState.update {
-                val newPosition: Pair<Int,Int> = createThePosition(it.snake)
+                val newPosition: Pair<Int,Int> = createThePosition(it.snake, it)
 
-                val newPositionRobot2 = createThePosition(it.secondRobot)
+                val newPositionRobot2 = createThePosition(it.secondRobot, it)
                 //GAME HAVE BEEN WON
                 if (newPosition == it.food) {
                     it.scoreRobotOne++
                 }
 
-                if (it.snake.contains(newPosition)) {
+                if (newPositionRobot2 == it.food){
+                    it.scoreRobotTwo++
+                }
+
+                /*if (it.snake.contains(newPosition)) {
                     snakeLength = 1
                     it.scoreRobotOne = 0
                 }
@@ -114,7 +118,7 @@ class Game(private val scope: CoroutineScope) {
                 }
                 if (it.snake.contains(newPosition)) {
                     snakeLength = 1
-                }
+                }*/
 
 
                 it.copy(
@@ -130,7 +134,7 @@ class Game(private val scope: CoroutineScope) {
 
     }
 
-    private suspend fun createThePosition(robot: List<Pair<Int, Int>>): Pair<Int,Int> {
+    private suspend fun createThePosition(robot: List<Pair<Int, Int>>, state: State): Pair<Int,Int> {
         robot.first().let { poz ->
             var direction = ""
             when (move) {
@@ -150,7 +154,26 @@ class Game(private val scope: CoroutineScope) {
                     direction = "cima"
                 }
             }
-            val boolean = checkIfCanMove(direction, poz)
+
+            val finalMoveStart = (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE
+            val finalMoveEnd =  (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
+            val futurePoz = Pair(finalMoveStart, finalMoveEnd)
+            var boolean = checkIfCanMove(direction, poz)
+
+            if (state.secondRobot.contains(futurePoz)) {
+                Log.e("TESTE", "SNAKE EATING ROBOT2")
+                boolean = false
+            }
+
+            if (state.snake.contains(futurePoz)) {
+                Log.e("TESTE", "Self Target Robot1")
+                boolean = false
+            }
+
+            if (state.secondRobot.contains(futurePoz)) {
+                Log.e("TESTE", "Self Target Robot2")
+                boolean = false
+            }
 
             if (boolean) {
                 snakeLength++
