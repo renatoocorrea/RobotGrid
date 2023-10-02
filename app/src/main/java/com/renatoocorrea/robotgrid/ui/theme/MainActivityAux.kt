@@ -57,6 +57,7 @@ class MainActivityAux : ComponentActivity() {
 data class State(
     val food: Pair<Int, Int>,
     val snake: List<Pair<Int, Int>>,
+    val secondRobot: List<Pair<Int, Int>>,
     var scoreRobotOne: Int,
     var scoreRobotTwo: Int
 )
@@ -69,8 +70,9 @@ class Game(private val scope: CoroutineScope) {
             State(
                 food = Pair(0, 0),
                 snake = listOf(Pair(7, 7)),
+                secondRobot = listOf(Pair(3,3)),
                 scoreRobotOne = 0,
-                scoreRobotTwo = 0
+                scoreRobotTwo = 0,
             )
         )
     val state: Flow<State> = mutableState
@@ -116,7 +118,7 @@ class Game(private val scope: CoroutineScope) {
                     val boolean = checkIfCanMove(direction, poz)
 
 
-                    if(boolean) {
+                    if (boolean) {
                         snakeLength++
                         mutex.withLock {
                             Pair(
@@ -132,6 +134,46 @@ class Game(private val scope: CoroutineScope) {
                     }
                 }
 
+                val newPositionRobot2 = it.secondRobot.first().let { poz ->
+                    Log.e("TESTE", "POZ: " + poz)
+                    Log.e("TESTE", "Move: " + move)
+
+                    var direction = ""
+                    when (move) {
+                        Pair(1, 0) -> {
+                            direction = "frente"
+                        }
+
+                        Pair(0, 1) -> {
+                            direction = "baixo"
+                        }
+
+                        Pair(-1, 0) -> {
+                            direction = "trás"
+                        }
+
+                        Pair(0, -1) -> {
+                            direction = "cima"
+                        }
+                    }
+                    val boolean = checkIfCanMove(direction, poz)
+
+
+                    if (boolean) {
+                        snakeLength++
+                        mutex.withLock {
+                            Pair(
+                                (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE,
+                                (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
+                            )
+                        }
+                    } else {
+                        Pair(
+                            (poz.first + 0 + BOARD_SIZE) % BOARD_SIZE,
+                            (poz.second + 0 + BOARD_SIZE) % BOARD_SIZE
+                        )
+                    }
+                }
                 //GAME HAVE BEEN WON
                 if (newPosition == it.food) {
                     it.scoreRobotOne++
@@ -142,12 +184,28 @@ class Game(private val scope: CoroutineScope) {
                     it.scoreRobotOne = 0
                 }
 
+                Log.e("TESTE", "NEW POSITION: " + newPosition)
+                Log.e("TESTE", "NP ROBOT 2: " + it.secondRobot.first())
+                if (newPosition == it.secondRobot.first()) {
+                    Log.e("TESTE", "SNAKE EATING ROBOT")
+                    snakeLength = 1
+                }
+                if (it.secondRobot.contains(newPosition)) {
+                    Log.e("TESTE", "SNAKE EATING ROBOT2")
+                    snakeLength = 1
+                }
+                if (it.snake.contains(newPosition)) {
+                    snakeLength = 1
+                }
+
+
                 it.copy(
                     food = if (newPosition == it.food) Pair(
                         Random().nextInt(BOARD_SIZE),
                         Random().nextInt(BOARD_SIZE)
                     ) else it.food,
-                    snake = listOf(newPosition) + it.snake.take(snakeLength - 1)
+                    snake = listOf(newPosition) + it.snake.take(snakeLength - 1),
+                    secondRobot = listOf(newPositionRobot2) + it.secondRobot.take(snakeLength - 1)
                 )
             }
         }
@@ -173,8 +231,13 @@ class Game(private val scope: CoroutineScope) {
                 if (newPosition == it.food) {
                     snakeLength++
                 }
-
-                if (it.snake.contains(newPosition)) {
+                Log.e("TESTE", "NEW POSITION: " + newPosition)
+                Log.e("TESTE", "NP ROBOT 2: " + it.secondRobot.first())
+                if (newPosition == it.secondRobot.first()) {
+                    Log.e("TESTE", "SNAKE EATING ROBOT")
+                    snakeLength = 1
+                }
+                if (it.snake.contains(newPosition) || it.snake == (it.secondRobot)) {
                     snakeLength = 1
                 }
 
@@ -310,6 +373,18 @@ fun Board(state: State) {
                     .size(tileSize)
                     .background(
                         Color.Cyan, RoundedCornerShape(percent = 90)
+                    )
+            )
+        }
+
+        state.secondRobot.forEach {
+            Log.e("TESTE", "Second Robot: $it")
+            Box(
+                modifier = Modifier
+                    .offset(x = tileSize * it.first, y = tileSize * it.second)
+                    .size(tileSize)
+                    .background(
+                        Color.Green, RoundedCornerShape(percent = 90)
                     )
             )
         }
