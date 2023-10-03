@@ -75,7 +75,8 @@ data class State(
     val secondRobot: List<Pair<Int, Int>>,
     var scoreRobotOne: Int,
     var scoreRobotTwo: Int,
-    var whoseTurn: String
+    var whoseTurn: String,
+    var endGame: Boolean
 )
 
 class Game(private val scope: CoroutineScope) {
@@ -89,7 +90,8 @@ class Game(private val scope: CoroutineScope) {
                 secondRobot = listOf(Pair(6, 0)),
                 scoreRobotOne = 0,
                 scoreRobotTwo = 0,
-                whoseTurn = "Robot1"
+                whoseTurn = "Robot1",
+                endGame = false
             )
         )
     val state: Flow<State> = mutableState
@@ -106,6 +108,7 @@ class Game(private val scope: CoroutineScope) {
         }
 
     fun tryToMove() {
+
         scope.launch {
             delay(500)
             mutableState.update {
@@ -113,33 +116,69 @@ class Game(private val scope: CoroutineScope) {
                     val newPosition: Pair<Int, Int> = createThePosition(it.snake, it)
                     if (newPosition == it.food) {
                         it.scoreRobotOne++
+                        it.endGame = true
                     }
                     it.whoseTurn = "Robot2"
-                    it.copy(
-                        food = if (newPosition == it.food || it.secondRobot.contains(it.food)) {
-                            checkPrizeLocation(it)
-                        } else {
-                            it.food
-                        },
-                        snake = listOf(newPosition) + it.snake.take(snakeLength - 1),
-                        secondRobot = it.secondRobot + it.secondRobot.take(snakeLength - 1)
-                    )
+                    if (it.endGame) {
+                        snakeLength = 1
+
+                        it.copy(
+                            food = if (it.snake.contains(it.food) || newPosition == it.food) {
+                                checkPrizeLocation(it)
+                            } else {
+                                it.food
+                            },
+                            snake = listOf(Pair(0, 0)),
+                            secondRobot = listOf(Pair(6, 0)),
+                            endGame = false
+                        )
+
+                    } else {
+                        it.copy(
+                            food = if (newPosition == it.food || it.secondRobot.contains(it.food)) {
+                                checkPrizeLocation(it)
+                            } else {
+                                it.food
+                            },
+                            snake = listOf(newPosition) + it.snake.take(snakeLength - 1),
+                            secondRobot = it.secondRobot + it.secondRobot.take(snakeLength - 1),
+                            endGame = false
+                        )
+                    }
 
                 } else {
                     val newPositionRobot2 = createThePosition(it.secondRobot, it)
                     if (newPositionRobot2 == it.food) {
                         it.scoreRobotTwo++
+                        it.endGame = true
                     }
                     it.whoseTurn = "Robot1"
-                    it.copy(
-                        food = if (it.snake.contains(it.food) || newPositionRobot2 == it.food) {
-                            checkPrizeLocation(it)
-                        } else {
-                            it.food
-                        },
-                        snake = it.snake + it.snake.take(snakeLength - 1),
-                        secondRobot = listOf(newPositionRobot2) + it.secondRobot.take(snakeLength - 1)
-                    )
+                    if (it.endGame) {
+                        snakeLength = 1
+
+                        it.copy(
+                            food = if (it.snake.contains(it.food) || newPositionRobot2 == it.food) {
+                                checkPrizeLocation(it)
+                            } else {
+                                it.food
+                            },
+                            snake = listOf(Pair(0, 0)),
+                            secondRobot = listOf(Pair(6, 0)),
+                        )
+
+                    } else {
+                        it.copy(
+                            food = if (it.snake.contains(it.food) || newPositionRobot2 == it.food) {
+                                checkPrizeLocation(it)
+                            } else {
+                                it.food
+                            },
+                            snake = it.snake + it.snake.take(snakeLength - 1),
+                            secondRobot = listOf(newPositionRobot2) + it.secondRobot.take(
+                                snakeLength - 1
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -281,19 +320,19 @@ fun Snake(game: Game) {
 
 
         val up = Pair(0, -1)
-        val down = Pair(1,0)
-        val left = Pair(-1,0)
-        val right = Pair(1,0)
+        val down = Pair(1, 0)
+        val left = Pair(-1, 0)
+        val right = Pair(1, 0)
 
 
 //        for (i in 0..5) {
-            // ...
-            val random = Random()
-            val arr = arrayOf("UP", "DOWN", "LEFT", "RIGHT")
-            val select: Int = random.nextInt(arr.size)
-            Log.e("TESTE", "SELECTED: " + arr[select])
-            val pairMovement = getMovementPair(arr[select])
-            game.move = pairMovement
+        // ...
+        val random = Random()
+        val arr = arrayOf("UP", "DOWN", "LEFT", "RIGHT")
+        val select: Int = random.nextInt(arr.size)
+        Log.e("TESTE", "SELECTED: " + arr[select])
+        val pairMovement = getMovementPair(arr[select])
+        game.move = pairMovement
 //        }
 //        game.move = Pair(1,0)
 
@@ -306,12 +345,14 @@ fun Snake(game: Game) {
 
 @Composable
 fun getMovementPair(s: String): Pair<Int, Int> {
-    return when(s) {
-        "UP" -> Pair(0,-1)
-        "DOWN" -> Pair(0,1)
-        "LEFT" -> Pair(-1,0)
-        "RIGHT" -> Pair(1,0)
-        else -> {Pair(1,0)}
+    return when (s) {
+        "UP" -> Pair(0, -1)
+        "DOWN" -> Pair(0, 1)
+        "LEFT" -> Pair(-1, 0)
+        "RIGHT" -> Pair(1, 0)
+        else -> {
+            Pair(1, 0)
+        }
     }
 }
 
