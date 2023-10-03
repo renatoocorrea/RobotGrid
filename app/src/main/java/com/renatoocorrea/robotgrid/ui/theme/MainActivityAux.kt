@@ -58,7 +58,8 @@ data class State(
     val snake: List<Pair<Int, Int>>,
     val secondRobot: List<Pair<Int, Int>>,
     var scoreRobotOne: Int,
-    var scoreRobotTwo: Int
+    var scoreRobotTwo: Int,
+    var whoseTurn: String
 )
 
 class Game(private val scope: CoroutineScope) {
@@ -72,6 +73,7 @@ class Game(private val scope: CoroutineScope) {
                 secondRobot = listOf(Pair(3, 3)),
                 scoreRobotOne = 0,
                 scoreRobotTwo = 0,
+                whoseTurn = "Robot1"
             )
         )
     val state: Flow<State> = mutableState
@@ -91,17 +93,43 @@ class Game(private val scope: CoroutineScope) {
         scope.launch {
             delay(500)
             mutableState.update {
-                val newPosition: Pair<Int, Int> = createThePosition(it.snake, it)
 
-                val newPositionRobot2 = createThePosition(it.secondRobot, it)
+                if (it.whoseTurn == "Robot1") {
+                    val newPosition: Pair<Int, Int> = createThePosition(it.snake, it)
+                    if (newPosition == it.food) {
+                        it.scoreRobotOne++
+                    }
+                    it.whoseTurn = "Robot2"
+                    it.copy(
+                        food = if (newPosition == it.food || it.secondRobot.contains(it.food)) {
+                            checkPrizeLocation(it)
+                        } else {
+                            it.food
+                        },
+                        snake = listOf(newPosition) + it.snake.take(snakeLength - 1),
+                        secondRobot = it.secondRobot + it.secondRobot.take(snakeLength - 1)
+                    )
+
+                } else {
+                    val newPositionRobot2 = createThePosition(it.secondRobot, it)
+                    if (newPositionRobot2 == it.food) {
+                        it.scoreRobotTwo++
+                    }
+                    it.whoseTurn = "Robot1"
+                    it.copy(
+                        food = if (it.snake.contains(it.food) || newPositionRobot2 == it.food) {
+                            checkPrizeLocation(it)
+                        } else {
+                            it.food
+                        },
+                        snake = it.snake + it.snake.take(snakeLength - 1),
+                        secondRobot = listOf(newPositionRobot2) + it.secondRobot.take(snakeLength - 1)
+                    )
+                }
                 //GAME HAVE BEEN WON
-                if (newPosition == it.food) {
-                    it.scoreRobotOne++
-                }
 
-                if (newPositionRobot2 == it.food) {
-                    it.scoreRobotTwo++
-                }
+
+
 
                 /*if (it.snake.contains(newPosition)) {
                     snakeLength = 1
@@ -121,25 +149,21 @@ class Game(private val scope: CoroutineScope) {
                 }*/
 
 
-                it.copy(
+                /*it.copy(
                     food = if (newPosition == it.food || newPositionRobot2 == it.food) {
                         checkPrizeLocation(it, newPosition)
-                        /*Pair(
-                            Random().nextInt(BOARD_SIZE),
-                            Random().nextInt(BOARD_SIZE)
-                        )*/
                     } else {
                         it.food
                     },
                     snake = listOf(newPosition) + it.snake.take(snakeLength - 1),
                     secondRobot = listOf(newPositionRobot2) + it.secondRobot.take(snakeLength - 1)
-                )
+                )*/
             }
         }
 
     }
 
-    private fun checkPrizeLocation(state: State, newPosition: Pair<Int, Int>): Pair<Int, Int> {
+    private fun checkPrizeLocation(state: State): Pair<Int, Int> {
         var x = Random().nextInt(BOARD_SIZE)
         var y = Random().nextInt(BOARD_SIZE)
         var validPairForPrize = Pair(x, y)
