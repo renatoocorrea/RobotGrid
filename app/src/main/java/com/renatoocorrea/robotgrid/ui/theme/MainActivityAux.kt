@@ -6,11 +6,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +35,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import com.renatoocorrea.robotgrid.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -34,8 +44,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import com.renatoocorrea.robotgrid.R
-import java.util.*
+import java.util.Random
 
 class MainActivityAux : ComponentActivity() {
 
@@ -269,13 +278,41 @@ fun Snake(game: Game) {
         state.value?.let {
             Board(it)
         }
-//        val up = Pair()
+
+
+        val up = Pair(0, -1)
+        val down = Pair(1,0)
+        val left = Pair(-1,0)
+        val right = Pair(1,0)
+
+
+//        for (i in 0..5) {
+            // ...
+            val random = Random()
+            val arr = arrayOf("UP", "DOWN", "LEFT", "RIGHT")
+            val select: Int = random.nextInt(arr.size)
+            Log.e("TESTE", "SELECTED: " + arr[select])
+            val pairMovement = getMovementPair(arr[select])
+            game.move = pairMovement
+//        }
 //        game.move = Pair(1,0)
+
         Buttons {
             game.move = it
         }
     }
 
+}
+
+@Composable
+fun getMovementPair(s: String): Pair<Int, Int> {
+    return when(s) {
+        "UP" -> Pair(0,-1)
+        "DOWN" -> Pair(0,1)
+        "LEFT" -> Pair(-1,0)
+        "RIGHT" -> Pair(1,0)
+        else -> {Pair(1,0)}
+    }
 }
 
 @Composable
