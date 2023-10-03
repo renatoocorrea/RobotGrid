@@ -20,7 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
@@ -31,13 +34,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import com.renatoocorrea.robotgrid.R
 import java.util.*
 
 class MainActivityAux : ComponentActivity() {
+
+    lateinit var game: Game
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val game = Game(lifecycleScope)
+        game = Game(lifecycleScope)
 
         setContent {
             RobotGridTheme {
@@ -68,9 +75,9 @@ class Game(private val scope: CoroutineScope) {
     private val mutableState =
         MutableStateFlow(
             State(
-                food = Pair(0, 0),
-                snake = listOf(Pair(7, 7)),
-                secondRobot = listOf(Pair(3, 3)),
+                food = Pair(3, 3),
+                snake = listOf(Pair(0, 0)),
+                secondRobot = listOf(Pair(6, 0)),
                 scoreRobotOne = 0,
                 scoreRobotTwo = 0,
                 whoseTurn = "Robot1"
@@ -93,7 +100,6 @@ class Game(private val scope: CoroutineScope) {
         scope.launch {
             delay(500)
             mutableState.update {
-
                 if (it.whoseTurn == "Robot1") {
                     val newPosition: Pair<Int, Int> = createThePosition(it.snake, it)
                     if (newPosition == it.food) {
@@ -126,38 +132,6 @@ class Game(private val scope: CoroutineScope) {
                         secondRobot = listOf(newPositionRobot2) + it.secondRobot.take(snakeLength - 1)
                     )
                 }
-                //GAME HAVE BEEN WON
-
-
-
-
-                /*if (it.snake.contains(newPosition)) {
-                    snakeLength = 1
-                    it.scoreRobotOne = 0
-                }
-
-                if (newPosition == it.secondRobot.first()) {
-                    Log.e("TESTE", "SNAKE EATING ROBOT")
-                    snakeLength = 1
-                }
-                if (it.secondRobot.contains(newPosition)) {
-                    Log.e("TESTE", "SNAKE EATING ROBOT2")
-                    snakeLength = 1
-                }
-                if (it.snake.contains(newPosition)) {
-                    snakeLength = 1
-                }*/
-
-
-                /*it.copy(
-                    food = if (newPosition == it.food || newPositionRobot2 == it.food) {
-                        checkPrizeLocation(it, newPosition)
-                    } else {
-                        it.food
-                    },
-                    snake = listOf(newPosition) + it.snake.take(snakeLength - 1),
-                    secondRobot = listOf(newPositionRobot2) + it.secondRobot.take(snakeLength - 1)
-                )*/
             }
         }
 
@@ -168,18 +142,17 @@ class Game(private val scope: CoroutineScope) {
         var y = Random().nextInt(BOARD_SIZE)
         var validPairForPrize = Pair(x, y)
 
-        while (state.snake.contains(validPairForPrize) || state.secondRobot.contains(validPairForPrize)) {
+        while (state.snake.contains(validPairForPrize) || state.secondRobot.contains(
+                validPairForPrize
+            )
+        ) {
             x = Random().nextInt(BOARD_SIZE)
             y = Random().nextInt(BOARD_SIZE)
-            validPairForPrize = Pair(x,y)
+            validPairForPrize = Pair(x, y)
         }
 
         Log.e("TESTE", "PrizeLocation: $validPairForPrize")
         return validPairForPrize
-        /* state.food = if (newPosition == state.food) Pair(
-             Random().nextInt(BOARD_SIZE),
-             Random().nextInt(BOARD_SIZE)
-         ) else state.food*/
     }
 
     private suspend fun createThePosition(
@@ -243,47 +216,6 @@ class Game(private val scope: CoroutineScope) {
         }
     }
 
-    init {
-        scope.launch {
-            var snakeLength = 1
-
-//            while (true) {
-            delay(500)
-            mutableState.update {
-                val newPosition = it.snake.first().let { poz ->
-                    mutex.withLock {
-                        Pair(
-                            (poz.first + move.first + BOARD_SIZE) % BOARD_SIZE,
-                            (poz.second + move.second + BOARD_SIZE) % BOARD_SIZE
-                        )
-                    }
-                }
-
-                if (newPosition == it.food) {
-                    snakeLength++
-                }
-                Log.e("TESTE", "NEW POSITION: " + newPosition)
-                Log.e("TESTE", "NP ROBOT 2: " + it.secondRobot.first())
-                if (newPosition == it.secondRobot.first()) {
-                    Log.e("TESTE", "SNAKE EATING ROBOT")
-                    snakeLength = 1
-                }
-                if (it.snake.contains(newPosition) || it.snake == (it.secondRobot)) {
-                    snakeLength = 1
-                }
-
-                it.copy(
-                    food = if (newPosition == it.food) Pair(
-                        Random().nextInt(BOARD_SIZE),
-                        Random().nextInt(BOARD_SIZE)
-                    ) else it.food,
-                    snake = listOf(newPosition) + it.snake.take(snakeLength - 1)
-                )
-            }
-        }
-//        }
-    }
-
     companion object {
         const val BOARD_SIZE = 7
     }
@@ -330,11 +262,6 @@ class Game(private val scope: CoroutineScope) {
 }
 
 @Composable
-fun YouHaveWon() {
-    Text(text = "YOU HAVE WON")
-}
-
-@Composable
 fun Snake(game: Game) {
     val state = game.state.collectAsState(initial = null)
 
@@ -342,6 +269,8 @@ fun Snake(game: Game) {
         state.value?.let {
             Board(it)
         }
+//        val up = Pair()
+//        game.move = Pair(1,0)
         Buttons {
             game.move = it
         }
@@ -378,12 +307,12 @@ fun Board(state: State) {
     BoxWithConstraints(Modifier.padding(16.dp)) {
         val tileSize = maxWidth / Game.BOARD_SIZE
 
-
         //QUADRO DO JOGO
         Box(
             Modifier
                 .size(maxWidth)
                 .border(2.dp, DarkGreen)
+                .background(Color.Black)
         )
 
         //Põe a fruta
@@ -391,20 +320,17 @@ fun Board(state: State) {
             Modifier
                 .offset(x = tileSize * state.food.first, y = tileSize * state.food.second)
                 .size(tileSize)
-                .background(
-                    Color.Red, CircleShape
-                )
+                .paint(painterResource(id = R.drawable.trophy), contentScale = ContentScale.Crop)
         )
 
         state.snake.forEach {
             Log.e("TESTE", "Stado da Cobra: $it")
+
             Box(
                 modifier = Modifier
                     .offset(x = tileSize * it.first, y = tileSize * it.second)
                     .size(tileSize)
-                    .background(
-                        Color.Cyan, RoundedCornerShape(percent = 90)
-                    )
+                    .paint(painterResource(id = R.drawable.robot), contentScale = ContentScale.Crop)
             )
         }
 
@@ -414,8 +340,9 @@ fun Board(state: State) {
                 modifier = Modifier
                     .offset(x = tileSize * it.first, y = tileSize * it.second)
                     .size(tileSize)
-                    .background(
-                        Color.Green, RoundedCornerShape(percent = 90)
+                    .paint(
+                        painterResource(id = R.drawable.megaman),
+                        contentScale = ContentScale.Crop
                     )
             )
         }
