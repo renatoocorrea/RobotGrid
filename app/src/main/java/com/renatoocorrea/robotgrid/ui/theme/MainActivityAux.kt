@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -318,25 +319,14 @@ fun Snake(game: Game) {
             Board(it)
         }
 
-
-        val up = Pair(0, -1)
-        val down = Pair(1, 0)
-        val left = Pair(-1, 0)
-        val right = Pair(1, 0)
-
-
-//        for (i in 0..5) {
-        // ...
         val random = Random()
         val arr = arrayOf("UP", "DOWN", "LEFT", "RIGHT")
         val select: Int = random.nextInt(arr.size)
         Log.e("TESTE", "SELECTED: " + arr[select])
         val pairMovement = getMovementPair(arr[select])
         game.move = pairMovement
-//        }
-//        game.move = Pair(1,0)
 
-        Buttons {
+        Button {
             game.move = it
         }
     }
@@ -357,23 +347,11 @@ fun getMovementPair(s: String): Pair<Int, Int> {
 }
 
 @Composable
-fun Buttons(onDirectionChange: (Pair<Int, Int>) -> Unit) {
+fun Button(onDirectionChange: (Pair<Int, Int>) -> Unit) {
     val buttonSize = Modifier.size(64.dp)
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
         Button(onClick = { onDirectionChange(Pair(0, -1)) }, modifier = buttonSize) {
-            Icon(Icons.Default.KeyboardArrowUp, null)
-        }
-        Row {
-            Button(onClick = { onDirectionChange(Pair(-1, 0)) }, modifier = buttonSize) {
-                Icon(Icons.Default.KeyboardArrowLeft, null)
-            }
-            Spacer(modifier = buttonSize)
-            Button(onClick = { onDirectionChange(Pair(1, 0)) }, modifier = buttonSize) {
-                Icon(Icons.Default.KeyboardArrowRight, null)
-            }
-        }
-        Button(onClick = { onDirectionChange(Pair(0, 1)) }, modifier = buttonSize) {
-            Icon(Icons.Default.KeyboardArrowDown, null)
+            Icon(Icons.Default.PlayArrow, null)
         }
     }
 }
@@ -381,8 +359,6 @@ fun Buttons(onDirectionChange: (Pair<Int, Int>) -> Unit) {
 @Composable
 fun Board(state: State) {
     Column {
-
-
         BoxWithConstraints(Modifier.padding(16.dp)) {
             //QUADRO DO JOGO
             Box(
