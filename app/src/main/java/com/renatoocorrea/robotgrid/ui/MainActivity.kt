@@ -9,7 +9,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.renatoocorrea.robotgrid.ui.board.RobotGrid
-import com.renatoocorrea.robotgrid.ui.theme.Game
 import com.renatoocorrea.robotgrid.ui.theme.RobotGridTheme
 
 class MainActivity : ComponentActivity() {

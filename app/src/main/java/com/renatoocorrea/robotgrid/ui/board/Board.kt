@@ -18,7 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.renatoocorrea.robotgrid.R
 import com.renatoocorrea.robotgrid.ui.theme.DarkGreen
-import com.renatoocorrea.robotgrid.ui.theme.Game
+import com.renatoocorrea.robotgrid.ui.Game
 import com.renatoocorrea.robotgrid.ui.State
 
 @Composable

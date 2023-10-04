@@ -1,6 +1,5 @@
-package com.renatoocorrea.robotgrid.ui.theme
+package com.renatoocorrea.robotgrid.ui
 
-import com.renatoocorrea.robotgrid.ui.State
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
