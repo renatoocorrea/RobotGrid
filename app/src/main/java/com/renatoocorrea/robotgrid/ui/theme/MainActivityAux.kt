@@ -380,50 +380,74 @@ fun Buttons(onDirectionChange: (Pair<Int, Int>) -> Unit) {
 
 @Composable
 fun Board(state: State) {
-    Text(text = "SCORE1: " + state.scoreRobotOne)
-    Text(text = "SCORE2: " + state.scoreRobotTwo)
-    BoxWithConstraints(Modifier.padding(16.dp)) {
-        val tileSize = maxWidth / Game.BOARD_SIZE
+    Column {
 
-        //QUADRO DO JOGO
-        Box(
-            Modifier
-                .size(maxWidth)
-                .border(2.dp, DarkGreen)
-                .background(Color.Black)
-        )
 
-        //Põe a fruta
-        Box(
-            Modifier
-                .offset(x = tileSize * state.food.first, y = tileSize * state.food.second)
-                .size(tileSize)
-                .paint(painterResource(id = R.drawable.trophy), contentScale = ContentScale.Crop)
-        )
-
-        state.snake.forEach {
-            Log.e("TESTE", "Stado da Cobra: $it")
-
+        BoxWithConstraints(Modifier.padding(16.dp)) {
+            //QUADRO DO JOGO
             Box(
-                modifier = Modifier
-                    .offset(x = tileSize * it.first, y = tileSize * it.second)
-                    .size(tileSize)
-                    .paint(painterResource(id = R.drawable.robot), contentScale = ContentScale.Crop)
-            )
+                Modifier
+                    .size(width = maxWidth, height = 64.dp)
+                    .border(2.dp, DarkGreen)
+                    .background(Color.Black)
+            ) {
+                Column {
+                    Text(text = "SCORE RED ROBOT: " + state.scoreRobotOne, color = Color.Red)
+                    Text(text = "SCORE MEGAMAN : " + state.scoreRobotTwo, color = Color.Blue)
+                }
+            }
         }
 
-        state.secondRobot.forEach {
-            Log.e("TESTE", "Second Robot: $it")
+        BoxWithConstraints(Modifier.padding(8.dp)) {
+            val tileSize = maxWidth / Game.BOARD_SIZE
+
+            //QUADRO DO JOGO
             Box(
-                modifier = Modifier
-                    .offset(x = tileSize * it.first, y = tileSize * it.second)
+                Modifier
+                    .size(maxWidth)
+                    .border(2.dp, DarkGreen)
+                    .background(Color.Black)
+            )
+
+            //Põe a fruta
+            Box(
+                Modifier
+                    .offset(x = tileSize * state.food.first, y = tileSize * state.food.second)
                     .size(tileSize)
                     .paint(
-                        painterResource(id = R.drawable.megaman),
+                        painterResource(id = R.drawable.trophy),
                         contentScale = ContentScale.Crop
                     )
             )
+
+            state.snake.forEach {
+                Log.e("TESTE", "Stado da Cobra: $it")
+
+                Box(
+                    modifier = Modifier
+                        .offset(x = tileSize * it.first, y = tileSize * it.second)
+                        .size(tileSize)
+                        .paint(
+                            painterResource(id = R.drawable.robot),
+                            contentScale = ContentScale.Crop
+                        )
+                )
+            }
+
+            state.secondRobot.forEach {
+                Log.e("TESTE", "Second Robot: $it")
+                Box(
+                    modifier = Modifier
+                        .offset(x = tileSize * it.first, y = tileSize * it.second)
+                        .size(tileSize)
+                        .paint(
+                            painterResource(id = R.drawable.megaman),
+                            contentScale = ContentScale.Crop
+                        )
+                )
+            }
         }
     }
 }
+
 
