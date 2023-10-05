@@ -7,4 +7,9 @@ class Utils {
         LEFT,
         RIGHT
     }
+
+    enum class Turn {
+        ROBOT_ONE,
+        ROBOT_TWO
+    }
 }

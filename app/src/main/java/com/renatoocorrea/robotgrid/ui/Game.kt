@@ -22,7 +22,7 @@ class Game(private val scope: CoroutineScope) {
                 secondRobot = listOf(Pair(6, 0)),
                 scoreRobotOne = 0,
                 scoreRobotTwo = 0,
-                whoseTurn = "Robot1",
+                whoseTurn = Utils.Turn.ROBOT_ONE,
                 endGame = false
             )
         )
@@ -44,27 +44,16 @@ class Game(private val scope: CoroutineScope) {
         scope.launch {
             delay(500)
             mutableState.update {
-                if (it.whoseTurn == "Robot1") {
+                if (it.whoseTurn == Utils.Turn.ROBOT_ONE) {
                     val newPosition: Pair<Int, Int> = createThePosition(it.firstRobot, it)
                     if (newPosition == it.prize) {
                         it.scoreRobotOne++
                         it.endGame = true
                     }
-                    it.whoseTurn = "Robot2"
+                    it.whoseTurn = Utils.Turn.ROBOT_TWO
                     if (it.endGame) {
                         robotSize = 1
-
-                        it.copy(
-                            prize = if (it.firstRobot.contains(it.prize) || newPosition == it.prize) {
-                                checkPrizeLocation(it)
-                            } else {
-                                it.prize
-                            },
-                            firstRobot = listOf(Pair(0, 0)),
-                            secondRobot = listOf(Pair(6, 0)),
-                            endGame = false
-                        )
-
+                        resetPositions(it, newPosition)
                     } else {
                         it.copy(
                             prize = if (newPosition == it.prize || it.secondRobot.contains(it.prize)) {
@@ -84,20 +73,10 @@ class Game(private val scope: CoroutineScope) {
                         it.scoreRobotTwo++
                         it.endGame = true
                     }
-                    it.whoseTurn = "Robot1"
+                    it.whoseTurn = Utils.Turn.ROBOT_ONE
                     if (it.endGame) {
                         robotSize = 1
-
-                        it.copy(
-                            prize = if (it.firstRobot.contains(it.prize) || newPositionRobot2 == it.prize) {
-                                checkPrizeLocation(it)
-                            } else {
-                                it.prize
-                            },
-                            firstRobot = listOf(Pair(0, 0)),
-                            secondRobot = listOf(Pair(6, 0)),
-                        )
-
+                        resetPositions(it, newPositionRobot2)
                     } else {
                         it.copy(
                             prize = if (it.firstRobot.contains(it.prize) || newPositionRobot2 == it.prize) {
@@ -139,22 +118,22 @@ class Game(private val scope: CoroutineScope) {
         state: State
     ): Pair<Int, Int> {
         robot.first().let { poz ->
-            var direction = ""
+            var direction = Utils.Movements.UP
             when (move) {
                 Pair(1, 0) -> {
-                    direction = "frente"
+                    direction = Utils.Movements.RIGHT
                 }
 
                 Pair(0, 1) -> {
-                    direction = "baixo"
+                    direction = Utils.Movements.DOWN
                 }
 
                 Pair(-1, 0) -> {
-                    direction = "trás"
+                    direction = Utils.Movements.LEFT
                 }
 
                 Pair(0, -1) -> {
-                    direction = "cima"
+                    direction = Utils.Movements.UP
                 }
             }
 
@@ -192,15 +171,28 @@ class Game(private val scope: CoroutineScope) {
         }
     }
 
+    private fun resetPositions(it: State, newPosition: Pair<Int,Int>): State {
+        return it.copy(
+            prize = if (it.firstRobot.contains(it.prize) || newPosition == it.prize) {
+                checkPrizeLocation(it)
+            } else {
+                it.prize
+            },
+            firstRobot = listOf(Pair(0, 0)),
+            secondRobot = listOf(Pair(6, 0)),
+            endGame = false
+        )
+    }
+
     companion object {
         const val BOARD_SIZE = 7
     }
 
-    private fun checkIfCanMove(direction: String, poz: Pair<Int, Int>): Boolean {
+    private fun checkIfCanMove(direction: Utils.Movements, poz: Pair<Int, Int>): Boolean {
         var result = false
 
         when (direction) {
-            "frente" -> {
+            Utils.Movements.RIGHT -> {
                 if (poz.first > 5) {
                     result = false
                 } else {
@@ -208,7 +200,7 @@ class Game(private val scope: CoroutineScope) {
                 }
             }
 
-            "baixo" -> {
+            Utils.Movements.DOWN -> {
                 if (poz.second > 5) {
                     result = false
                 } else {
@@ -216,7 +208,7 @@ class Game(private val scope: CoroutineScope) {
                 }
             }
 
-            "trás" -> {
+            Utils.Movements.LEFT -> {
                 if (poz.first < 1) {
                     result = false
                 } else {
@@ -224,7 +216,7 @@ class Game(private val scope: CoroutineScope) {
                 }
             }
 
-            "cima" -> {
+            Utils.Movements.UP -> {
                 if (poz.second < 1) {
                     result = false
                 } else {

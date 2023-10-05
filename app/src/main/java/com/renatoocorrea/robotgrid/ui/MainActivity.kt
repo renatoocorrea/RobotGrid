@@ -39,7 +39,7 @@ data class State(
     val secondRobot: List<Pair<Int, Int>>,
     var scoreRobotOne: Int,
     var scoreRobotTwo: Int,
-    var whoseTurn: String,
+    var whoseTurn: Utils.Turn,
     var endGame: Boolean
 )
 

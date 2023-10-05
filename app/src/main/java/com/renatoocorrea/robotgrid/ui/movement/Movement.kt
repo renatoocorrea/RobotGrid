@@ -1,5 +1,6 @@
 package com.renatoocorrea.robotgrid.ui.movement
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import com.renatoocorrea.robotgrid.ui.Utils
 import java.util.Random
@@ -15,6 +16,7 @@ fun generateRandomMove(): Pair<Int, Int> {
         Utils.Movements.RIGHT
     )
     val select: Int = random.nextInt(arr.size)
+    Log.e("TESTE", "GENERATE RANDOM MOVE CALLED  " + getMovementPair(arr[select]))
     return getMovementPair(arr[select])
 }
 
