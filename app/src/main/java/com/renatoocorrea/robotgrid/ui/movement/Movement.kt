@@ -16,7 +16,6 @@ fun generateRandomMove(): Pair<Int, Int> {
         Utils.Movements.RIGHT
     )
     val select: Int = random.nextInt(arr.size)
-    Log.e("TESTE", "GENERATE RANDOM MOVE CALLED  " + getMovementPair(arr[select]))
     return getMovementPair(arr[select])
 }
 
